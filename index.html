@@ -57,11 +57,21 @@
           data: [],
           backgroundColor: 'rgba(54, 162, 235, 0.2)',
           borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1
+          borderWidth: 1,
+          fill: false
         }]
       },
       options: {
         scales: {
+          x: {
+            type: 'realtime',
+            realtime: {
+              delay: 2000,
+              refresh: 1000,
+              duration: 10000,
+              onRefresh: updateChart
+            }
+          },
           y: {
             beginAtZero: true
           }
@@ -69,14 +79,19 @@
       }
     });
 
-    // Fungsi untuk menambahkan data ke grafik
-    function addData(chart, label, data) {
-      chart.data.labels.push(label);
-      chart.data.datasets.forEach((dataset) => {
-        dataset.data.push(data);
-      });
-      // Mengupdate chart
-      chart.update();
+    // Fungsi untuk memperbarui grafik
+    function updateChart(chart) {
+      const totalRequests = parseInt(sessionStorage.getItem('totalRequests') || '0', 10);
+      const currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
+
+      chart.data.labels.push(currentTime);
+      chart.data.datasets[0].data.push(totalRequests);
+
+      // Batasi jumlah data yang ditampilkan ke 10 titik terakhir
+      if (chart.data.labels.length > 10) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
     }
 
     // Fungsi untuk memperbarui data statistik
@@ -111,20 +126,23 @@
         blockedRequests++;
       }
       saveData(totalRequests, blockedRequests);
+      updateStats(totalRequests, blockedRequests);
     }
 
     // Track request saat halaman di-load
     window.addEventListener('load', () => {
       trackRequest();
-      updateStats(totalRequests, blockedRequests);
     });
 
-    // Loop untuk memperbarui grafik setiap detik
+    // Set interval untuk memperbarui statistik setiap detik
     setInterval(() => {
-      let currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
-      addData(requestChart, currentTime, totalRequests); // Menambahkan data ke grafik
-      updateStats(totalRequests, blockedRequests); // Memperbarui statistik
-    }, 1000); // Interval setiap detik (1000ms)
+      updateStats(totalRequests, blockedRequests);
+    }, 1000);
+
+    // Set interval untuk memperbarui grafik setiap detik
+    setInterval(() => {
+      updateChart(requestChart);
+    }, 1000);
   </script>
 </body>
 </html>
