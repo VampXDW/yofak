@@ -1,26 +1,26 @@
-// Inisialisasi data dan session storage
-if (!sessionStorage.getItem('requestsPerSecond')) {
-    sessionStorage.setItem('requestsPerSecond', JSON.stringify([]));
+// Inisialisasi data dan local storage
+if (!localStorage.getItem('requestsPerSecond')) {
+    localStorage.setItem('requestsPerSecond', JSON.stringify([]));
 }
 
 // Fungsi untuk menambah data request per detik
 function addRequestData() {
     const now = new Date().getTime();
-    let data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
+    let data = JSON.parse(localStorage.getItem('requestsPerSecond'));
 
     // Hapus data yang lebih lama dari 60 detik
     data = data.filter(entry => now - entry.time < 60000);
 
     // Tambahkan data baru
     data.push({ time: now, value: 1 });
-    sessionStorage.setItem('requestsPerSecond', JSON.stringify(data));
+    localStorage.setItem('requestsPerSecond', JSON.stringify(data));
 
     updateChart();
 }
 
 // Fungsi untuk memperbarui chart
 function updateChart() {
-    const data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
+    const data = JSON.parse(localStorage.getItem('requestsPerSecond'));
     const now = new Date().getTime();
 
     // Hitung jumlah request per detik dalam 60 detik terakhir
@@ -69,5 +69,8 @@ const myChart = new Chart(ctx, {
     }
 });
 
-// Simulasi request setiap detik
-setInterval(addRequestData, 1000);
+// Simpan data setiap kali halaman dimuat atau direfresh
+window.addEventListener('load', addRequestData);
+
+// Perbarui grafik setiap detik
+setInterval(updateChart, 1000);
