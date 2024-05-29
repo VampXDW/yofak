@@ -47,8 +47,8 @@
   
   <script>
     // Inisialisasi Chart
-    var ctx = document.getElementById('requestChart').getContext('2d');
-    var requestChart = new Chart(ctx, {
+    const ctx = document.getElementById('requestChart').getContext('2d');
+    const requestChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: [],
@@ -64,7 +64,10 @@
       options: {
         scales: {
           x: {
-            type: 'realtime',
+            type: 'time',
+            time: {
+              unit: 'second'
+            },
             realtime: {
               delay: 2000,
               refresh: 1000,
@@ -80,18 +83,20 @@
     });
 
     // Fungsi untuk memperbarui grafik
-    function updateChart(chart) {
+    function updateChart() {
       const totalRequests = parseInt(sessionStorage.getItem('totalRequests') || '0', 10);
-      const currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
+      const currentTime = new Date(); // Mendapatkan waktu saat ini
 
-      chart.data.labels.push(currentTime);
-      chart.data.datasets[0].data.push(totalRequests);
+      requestChart.data.labels.push(currentTime);
+      requestChart.data.datasets[0].data.push(totalRequests);
 
       // Batasi jumlah data yang ditampilkan ke 10 titik terakhir
-      if (chart.data.labels.length > 10) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
+      if (requestChart.data.labels.length > 10) {
+        requestChart.data.labels.shift();
+        requestChart.data.datasets[0].data.shift();
       }
+
+      requestChart.update();
     }
 
     // Fungsi untuk memperbarui data statistik
@@ -134,14 +139,9 @@
       trackRequest();
     });
 
-    // Set interval untuk memperbarui statistik setiap detik
-    setInterval(() => {
-      updateStats(totalRequests, blockedRequests);
-    }, 1000);
-
     // Set interval untuk memperbarui grafik setiap detik
     setInterval(() => {
-      updateChart(requestChart);
+      updateChart();
     }, 1000);
   </script>
 </body>
