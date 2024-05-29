@@ -85,17 +85,17 @@
       document.getElementById('blockedRequests').textContent = blocked;
     }
 
-    // Fungsi untuk menyimpan data ke local storage
+    // Fungsi untuk menyimpan data ke session storage
     function saveData(total, blocked) {
-      localStorage.setItem('totalRequests', total);
-      localStorage.setItem('blockedRequests', blocked);
+      sessionStorage.setItem('totalRequests', total);
+      sessionStorage.setItem('blockedRequests', blocked);
     }
 
-    // Fungsi untuk mengambil data dari local storage
+    // Fungsi untuk mengambil data dari session storage
     function getData() {
       return {
-        totalRequests: parseInt(localStorage.getItem('totalRequests') || '0', 10),
-        blockedRequests: parseInt(localStorage.getItem('blockedRequests') || '0', 10)
+        totalRequests: parseInt(sessionStorage.getItem('totalRequests') || '0', 10),
+        blockedRequests: parseInt(sessionStorage.getItem('blockedRequests') || '0', 10)
       };
     }
 
@@ -103,17 +103,27 @@
     let { totalRequests, blockedRequests } = getData();
     updateStats(totalRequests, blockedRequests);
 
-    // Loop untuk memperbarui grafik setiap detik
-    setInterval(() => {
+    // Fungsi untuk mencatat setiap kali halaman diakses atau di-refresh
+    function trackRequest() {
       totalRequests++;
       let isBlocked = Math.random() < 0.1; // Simulasi 10% request diblokir
       if (isBlocked) {
         blockedRequests++;
       }
+      saveData(totalRequests, blockedRequests);
+    }
+
+    // Track request saat halaman di-load
+    window.addEventListener('load', () => {
+      trackRequest();
+      updateStats(totalRequests, blockedRequests);
+    });
+
+    // Loop untuk memperbarui grafik setiap detik
+    setInterval(() => {
       let currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
       addData(requestChart, currentTime, totalRequests); // Menambahkan data ke grafik
       updateStats(totalRequests, blockedRequests); // Memperbarui statistik
-      saveData(totalRequests, blockedRequests); // Menyimpan data ke local storage
     }, 1000); // Interval setiap detik (1000ms)
   </script>
 </body>
