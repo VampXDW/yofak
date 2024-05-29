@@ -23,15 +23,28 @@
     h1 {
       text-align: center;
     }
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .stats div {
+      flex: 1;
+      text-align: center;
+      font-size: 1.2em;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Request per Second</h1>
     <canvas id="requestChart" width="400" height="200"></canvas>
-    <p>Blocked Requests: <span id="blockedRequests">0</span></p>
+    <div class="stats">
+      <div>Requests: <span id="totalRequests">0</span></div>
+      <div>Blocked Requests: <span id="blockedRequests">0</span></div>
+    </div>
   </div>
-
+  
   <script>
     // Inisialisasi Chart
     var ctx = document.getElementById('requestChart').getContext('2d');
@@ -66,25 +79,41 @@
       chart.update();
     }
 
-    // Fungsi untuk mengambil data request per detik (di sini hanya digunakan data dummy)
-    function getRequestData() {
+    // Fungsi untuk memperbarui data statistik
+    function updateStats(total, blocked) {
+      document.getElementById('totalRequests').textContent = total;
+      document.getElementById('blockedRequests').textContent = blocked;
+    }
+
+    // Fungsi untuk menyimpan data ke local storage
+    function saveData(total, blocked) {
+      localStorage.setItem('totalRequests', total);
+      localStorage.setItem('blockedRequests', blocked);
+    }
+
+    // Fungsi untuk mengambil data dari local storage
+    function getData() {
       return {
-        requests: Math.floor(Math.random() * 10), // Dummy data
-        blocked: Math.floor(Math.random() * 3) // Dummy data
+        totalRequests: parseInt(localStorage.getItem('totalRequests') || '0', 10),
+        blockedRequests: parseInt(localStorage.getItem('blockedRequests') || '0', 10)
       };
     }
 
-    // Fungsi untuk menambahkan jumlah request yang diblokir
-    function updateBlockedRequests(numBlocked) {
-      document.getElementById('blockedRequests').textContent = numBlocked;
-    }
+    // Inisialisasi data
+    let { totalRequests, blockedRequests } = getData();
+    updateStats(totalRequests, blockedRequests);
 
     // Loop untuk memperbarui grafik setiap detik
     setInterval(() => {
-      var { requests, blocked } = getRequestData(); // Mendapatkan data request per detik
-      var currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
-      addData(requestChart, currentTime, requests); // Menambahkan data ke grafik
-      updateBlockedRequests(blocked); // Memperbarui jumlah request yang diblokir
+      totalRequests++;
+      let isBlocked = Math.random() < 0.1; // Simulasi 10% request diblokir
+      if (isBlocked) {
+        blockedRequests++;
+      }
+      let currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
+      addData(requestChart, currentTime, totalRequests); // Menambahkan data ke grafik
+      updateStats(totalRequests, blockedRequests); // Memperbarui statistik
+      saveData(totalRequests, blockedRequests); // Menyimpan data ke local storage
     }, 1000); // Interval setiap detik (1000ms)
   </script>
 </body>
