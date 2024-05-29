@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requests per Second</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #requestChart {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="requestChart"></canvas>
+
+    <script>
+        const requestsData = [];
+        const allowedRequests = [];
+        const blockedRequests = [];
+
+        function updateRequestsData() {
+            const currentTime = new Date().getTime();
+            const lastSecond = currentTime - 1000;
+            const requestsLastSecond = requestsData.filter(requestTime => requestTime > lastSecond).length;
+
+            requestsData.push(currentTime);
+            if (requestsData.length > 10) {
+                requestsData.shift();
+            }
+
+            const allowed = Math.floor(Math.random() * requestsLastSecond);
+            const blocked = requestsLastSecond - allowed;
+
+            allowedRequests.push(allowed);
+            blockedRequests.push(blocked);
+
+            if (allowedRequests.length > 10) {
+                allowedRequests.shift();
+                blockedRequests.shift();
+            }
+
+            return requestsLastSecond;
+        }
+
+        const ctx = document.getElementById('requestChart').getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Requests per Second',
+                    data: [],
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Allowed Requests',
+                    data: [],
+                    fill: false,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            const requestsLastSecond = updateRequestsData();
+
+            myChart.data.labels.push(new Date().toLocaleTimeString());
+            myChart.data.datasets[0].data.push(requestsLastSecond);
+            myChart.data.datasets[1].data.push(allowedRequests[allowedRequests.length - 1]);
+            myChart.update();
+
+            setTimeout(updateChart, 1000);
+        }
+
+        updateChart();
+    </script>
+</body>
+</html>
