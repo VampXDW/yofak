@@ -1,54 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request per Second Graph</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request per Second</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-<h1>Request per Second Graph</h1>
-<canvas id="myChart" width="400" height="200"></canvas>
+  <div class="container">
+    <h1>Request per Second</h1>
+    <canvas id="requestChart" width="400" height="200"></canvas>
+    <p>Blocked Requests: <span id="blockedRequests">0</span></p>
+  </div>
 
-<script>
-// Inisialisasi variabel
-let requestCount = 0;
-let timestamps = [];
-let counts = [];
+  <script>
+    // Inisialisasi Chart
+    var ctx = document.getElementById('requestChart').getContext('2d');
+    var requestChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Requests per Second',
+          data: [],
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
 
-// Fungsi untuk menambahkan data ke grafik
-function updateChart() {
-  const now = new Date();
-  timestamps.push(now.toLocaleTimeString());
-  counts.push(requestCount);
-
-  // Membuat grafik
-  const ctx = document.getElementById('myChart').getContext('2d');
-  const myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: timestamps,
-      datasets: [{
-        label: 'Request per Second',
-        data: counts,
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      }]
+    // Fungsi untuk menambahkan data ke grafik
+    function addData(chart, label, data) {
+      chart.data.labels.push(label);
+      chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+      });
+      // Mengupdate chart
+      chart.update();
     }
-  });
-}
 
-// Fungsi untuk meningkatkan hitungan permintaan
-function increaseCount() {
-  requestCount++;
-}
+    // Fungsi untuk mengambil data request per detik (di sini hanya digunakan data dummy)
+    function getRequestData() {
+      return {
+        requests: Math.floor(Math.random() * 10), // Dummy data
+        blocked: Math.floor(Math.random() * 3) // Dummy data
+      };
+    }
 
-// Panggil fungsi updateChart dan increaseCount setiap detik
-setInterval(() => {
-  increaseCount();
-  updateChart();
-}, 1000);
-</script>
+    // Fungsi untuk menambahkan jumlah request yang diblokir
+    function updateBlockedRequests(numBlocked) {
+      document.getElementById('blockedRequests').textContent = numBlocked;
+    }
+
+    // Loop untuk memperbarui grafik setiap detik
+    setInterval(() => {
+      var { requests, blocked } = getRequestData(); // Mendapatkan data request per detik
+      var currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
+      addData(requestChart, currentTime, requests); // Menambahkan data ke grafik
+      updateBlockedRequests(blocked); // Memperbarui jumlah request yang diblokir
+    }, 1000); // Interval setiap detik (1000ms)
+  </script>
 </body>
 </html>
