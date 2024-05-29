@@ -1,150 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Request per Second</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      text-align: center;
-    }
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-    .stats div {
-      flex: 1;
-      text-align: center;
-      font-size: 1.2em;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Request per Second</h1>
-    <canvas id="requestChart" width="400" height="200"></canvas>
-    <div class="stats">
-      <div>Requests: <span id="totalRequests">0</span></div>
-      <div>Blocked Requests: <span id="blockedRequests">0</span></div>
-    </div>
-  </div>
-  
-  <script>
-    // Inisialisasi Chart
-    const ctx = document.getElementById('requestChart').getContext('2d');
-    const requestChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Requests per Second',
-          data: [],
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-          fill: false
-        }]
-      },
-      options: {
-        scales: {
-          x: {
-            type: 'time',
-            time: {
-              unit: 'second'
-            },
-            realtime: {
-              delay: 2000,
-              refresh: 1000,
-              duration: 10000,
-              onRefresh: updateChart
-            }
-          },
-          y: {
-            beginAtZero: true
-          }
+// Inisialisasi data dan session storage
+if (!sessionStorage.getItem('requestsPerSecond')) {
+    sessionStorage.setItem('requestsPerSecond', JSON.stringify([]));
+}
+
+// Fungsi untuk menambah data request per detik
+function addRequestData() {
+    const now = new Date().getTime();
+    let data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
+
+    // Hapus data yang lebih lama dari 60 detik
+    data = data.filter(entry => now - entry.time < 60000);
+
+    // Tambahkan data baru
+    data.push({ time: now, value: 1 });
+    sessionStorage.setItem('requestsPerSecond', JSON.stringify(data));
+
+    updateChart();
+}
+
+// Fungsi untuk memperbarui chart
+function updateChart() {
+    const data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
+    const now = new Date().getTime();
+
+    // Hitung jumlah request per detik dalam 60 detik terakhir
+    let requestsPerSecond = new Array(60).fill(0);
+    data.forEach(entry => {
+        const secondsAgo = Math.floor((now - entry.time) / 1000);
+        if (secondsAgo < 60) {
+            requestsPerSecond[59 - secondsAgo] += 1;
         }
-      }
     });
 
-    // Fungsi untuk memperbarui grafik
-    function updateChart() {
-      const totalRequests = parseInt(localStorage.getItem('totalRequests') || '0', 10);
-      const blockedRequests = parseInt(localStorage.getItem('blockedRequests') || '0', 10);
-      const currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
+    myChart.data.datasets[0].data = requestsPerSecond;
+    myChart.update();
+}
 
-      requestChart.data.labels.push(currentTime);
-      requestChart.data.datasets[0].data.push(totalRequests);
-
-      // Batasi jumlah data yang ditampilkan ke 10 titik terakhir
-      if (requestChart.data.labels.length > 10) {
-        requestChart.data.labels.shift();
-        requestChart.data.datasets[0].data.shift();
-      }
-
-      requestChart.update();
-      updateStats(totalRequests, blockedRequests);
+// Setup Chart.js
+const ctx = document.getElementById('myChart').getContext('2d');
+const myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: Array.from({ length: 60 }, (_, i) => i + 1).reverse(),
+        datasets: [{
+            label: 'Requests per Second',
+            data: new Array(60).fill(0),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Seconds Ago'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Requests'
+                },
+                beginAtZero: true
+            }
+        }
     }
+});
 
-    // Fungsi untuk memperbarui data statistik
-    function updateStats(total, blocked) {
-      document.getElementById('totalRequests').textContent = total;
-      document.getElementById('blockedRequests').textContent = blocked;
-    }
-
-    // Fungsi untuk menyimpan data ke localStorage
-    function saveData(total, blocked) {
-      localStorage.setItem('totalRequests', total);
-      localStorage.setItem('blockedRequests', blocked);
-    }
-
-    // Fungsi untuk mengambil data dari localStorage
-    function getData() {
-      return {
-        totalRequests: parseInt(localStorage.getItem('totalRequests') || '0', 10),
-        blockedRequests: parseInt(localStorage.getItem('blockedRequests') || '0', 10)
-      };
-    }
-
-    // Inisialisasi data
-    let { totalRequests, blockedRequests } = getData();
-    updateStats(totalRequests, blockedRequests);
-
-    // Fungsi untuk mencatat setiap kali halaman diakses atau di-refresh
-    function trackRequest() {
-      totalRequests++;
-      let isBlocked = Math.random() < 0.1; // Simulasi 10% request diblokir
-      if (isBlocked) {
-        blockedRequests++;
-      }
-      saveData(totalRequests, blockedRequests);
-      updateStats(totalRequests, blockedRequests);
-    }
-
-    // Track request saat halaman di-load
-    window.addEventListener('load', () => {
-      trackRequest();
-    });
-
-    // Set interval untuk memperbarui grafik setiap detik
-    setInterval(() => {
-      updateChart();
-    }, 1000);
-  </script>
-</body>
-</html>
+// Simulasi request setiap detik
+setInterval(addRequestData, 1000);
