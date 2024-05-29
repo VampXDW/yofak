@@ -64,7 +64,10 @@
       options: {
         scales: {
           x: {
-            type: 'realtime',
+            type: 'time',
+            time: {
+              unit: 'second'
+            },
             realtime: {
               delay: 2000,
               refresh: 1000,
@@ -82,6 +85,7 @@
     // Fungsi untuk memperbarui grafik
     function updateChart() {
       const totalRequests = parseInt(localStorage.getItem('totalRequests') || '0', 10);
+      const blockedRequests = parseInt(localStorage.getItem('blockedRequests') || '0', 10);
       const currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
 
       requestChart.data.labels.push(currentTime);
@@ -94,6 +98,7 @@
       }
 
       requestChart.update();
+      updateStats(totalRequests, blockedRequests);
     }
 
     // Fungsi untuk memperbarui data statistik
