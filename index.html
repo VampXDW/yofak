@@ -64,10 +64,7 @@
       options: {
         scales: {
           x: {
-            type: 'time',
-            time: {
-              unit: 'second'
-            },
+            type: 'realtime',
             realtime: {
               delay: 2000,
               refresh: 1000,
@@ -84,8 +81,8 @@
 
     // Fungsi untuk memperbarui grafik
     function updateChart() {
-      const totalRequests = parseInt(sessionStorage.getItem('totalRequests') || '0', 10);
-      const currentTime = new Date(); // Mendapatkan waktu saat ini
+      const totalRequests = parseInt(localStorage.getItem('totalRequests') || '0', 10);
+      const currentTime = new Date().toLocaleTimeString(); // Mendapatkan waktu saat ini
 
       requestChart.data.labels.push(currentTime);
       requestChart.data.datasets[0].data.push(totalRequests);
@@ -105,17 +102,17 @@
       document.getElementById('blockedRequests').textContent = blocked;
     }
 
-    // Fungsi untuk menyimpan data ke session storage
+    // Fungsi untuk menyimpan data ke localStorage
     function saveData(total, blocked) {
-      sessionStorage.setItem('totalRequests', total);
-      sessionStorage.setItem('blockedRequests', blocked);
+      localStorage.setItem('totalRequests', total);
+      localStorage.setItem('blockedRequests', blocked);
     }
 
-    // Fungsi untuk mengambil data dari session storage
+    // Fungsi untuk mengambil data dari localStorage
     function getData() {
       return {
-        totalRequests: parseInt(sessionStorage.getItem('totalRequests') || '0', 10),
-        blockedRequests: parseInt(sessionStorage.getItem('blockedRequests') || '0', 10)
+        totalRequests: parseInt(localStorage.getItem('totalRequests') || '0', 10),
+        blockedRequests: parseInt(localStorage.getItem('blockedRequests') || '0', 10)
       };
     }
 
