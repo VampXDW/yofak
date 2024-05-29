@@ -1,32 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request per Second Graph</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f5f5f5;
-        }
-        #myChart {
-            max-width: 80%;
-            max-height: 80%;
-        }
-    </style>
-</head>
-<body>
-    <h1>Request per Second</h1>
-    <canvas id="myChart"></canvas>
-    <script src="script.js"></script>
-</body>
-</html>
+// Inisialisasi data dan session storage
+if (!sessionStorage.getItem('requestsPerSecond')) {
+    sessionStorage.setItem('requestsPerSecond', JSON.stringify([]));
+}
 
+// Fungsi untuk menambah data request per detik
+function addRequestData() {
+    const now = new Date().getTime();
+    let data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
+
+    // Hapus data yang lebih lama dari 60 detik
+    data = data.filter(entry => now - entry.time < 60000);
+
+    // Tambahkan data baru
+    data.push({ time: now, value: 1 });
+    sessionStorage.setItem('requestsPerSecond', JSON.stringify(data));
+
+    updateChart();
+}
+
+// Fungsi untuk memperbarui chart
+function updateChart() {
+    const data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
+    const now = new Date().getTime();
+
+    // Hitung jumlah request per detik dalam 60 detik terakhir
+    let requestsPerSecond = new Array(60).fill(0);
+    data.forEach(entry => {
+        const secondsAgo = Math.floor((now - entry.time) / 1000);
+        if (secondsAgo < 60) {
+            requestsPerSecond[59 - secondsAgo] += 1;
+        }
+    });
+
+    myChart.data.datasets[0].data = requestsPerSecond;
+    myChart.update();
+}
+
+// Setup Chart.js
+const ctx = document.getElementById('myChart').getContext('2d');
+const myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: Array.from({ length: 60 }, (_, i) => i + 1).reverse(),
+        datasets: [{
+            label: 'Requests per Second',
+            data: new Array(60).fill(0),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Seconds Ago'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Requests'
+                },
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Simulasi request setiap detik
+setInterval(addRequestData, 1000);
