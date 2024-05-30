@@ -3,78 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Requests per Second Graph</title>
+    <title>Requests Per Second</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@nagix/chartjs-plugin-streaming"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        #myChart {
+            width: 80%;
+            height: 80%;
+        }
+    </style>
 </head>
 <body>
-    <div style="width: 75%; margin: auto;">
-        <canvas id="rpsChart"></canvas>
-    </div>
-    
-    <script>
-        // Dummy data for example purpose
-        const initialData = {
-            labels: [], // Timestamps
-            datasets: [{
-                label: 'Requests per Second',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-                data: [] // Requests per second
-            }]
-        };
-
-        // Configuration for the chart
-        const config = {
-            type: 'line',
-            data: initialData,
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'second',
-                            tooltipFormat: 'll HH:mm:ss'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Time'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Requests per Second'
-                        }
-                    }
-                }
-            }
-        };
-
-        // Initialize the chart
-        const ctx = document.getElementById('rpsChart').getContext('2d');
-        const rpsChart = new Chart(ctx, config);
-
-        // Function to update chart with new data
-        function updateChart() {
-            const currentTime = new Date();
-            const randomRPS = Math.floor(Math.random() * 100); // Generate random RPS for demo
-
-            // Add new data
-            if (rpsChart.data.labels.length > 30) { // Keep only the latest 30 data points
-                rpsChart.data.labels.shift();
-                rpsChart.data.datasets[0].data.shift();
-            }
-            rpsChart.data.labels.push(currentTime);
-            rpsChart.data.datasets[0].data.push(randomRPS);
-
-            rpsChart.update();
-        }
-
-        // Update the chart every second
-        setInterval(updateChart, 1000);
-    </script>
+    <canvas id="myChart"></canvas>
+    <script src="script.js"></script>
 </body>
 </html>
