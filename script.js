@@ -1,70 +1,60 @@
-if (!sessionStorage.getItem('requestsPerSecond')) {
-    sessionStorage.setItem('requestsPerSecond', JSON.stringify([]));
-}
-
-function addRequestData() {
-    const now = performance.now();
-    let data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
-
-    // Hapus data yang lebih lama dari 60 detik
-    data = data.filter(entry => now - entry.time < 60000);
-
-    // Tambahkan data baru
-    data.push({ time: now, value: 1 });
-    sessionStorage.setItem('requestsPerSecond', JSON.stringify(data));
-
-    updateChart();
-}
-
-function updateChart() {
-    const data = JSON.parse(sessionStorage.getItem('requestsPerSecond'));
-    const now = performance.now();
-
-    // Hitung jumlah request per detik dalam 60 detik terakhir
-    let requestsPerSecond = new Array(60).fill(0);
-    data.forEach(entry => {
-        const secondsAgo = Math.floor((now - entry.time) / 1000);
-        if (secondsAgo < 60) {
-            requestsPerSecond[59 - secondsAgo] += 1;
-        }
-    });
-
-    myChart.data.datasets[0].data = requestsPerSecond;
-    myChart.update();
-}
-
 const ctx = document.getElementById('myChart').getContext('2d');
-const myChart = new Chart(ctx, {
+
+const config = {
     type: 'line',
     data: {
-        labels: Array.from({ length: 60 }, (_, i) => i + 1).reverse(),
         datasets: [{
-            label: 'Requests per Second',
-            data: new Array(60).fill(0),
+            label: 'Requests Per Second',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            fill: false
+            fill: false,
+            lineTension: 0,
+            borderDash: [8, 4],
+            data: []
         }]
     },
     options: {
+        responsive: true,
         scales: {
             x: {
-                title: {
-                    display: true,
-                    text: 'Seconds Ago'
+                type: 'realtime',
+                realtime: {
+                    duration: 20000,  // Menampilkan 20 detik data
+                    refresh: 1000,    // Refresh setiap 1 detik
+                    delay: 1000,      // Delay untuk sinkronisasi data
+                    onRefresh: function(chart) {
+                        chart.data.datasets.forEach(function(dataset) {
+                            dataset.data.push({
+                                x: Date.now(),
+                                y: getRequestsPerSecond()  // Dapatkan data request per detik
+                            });
+                        });
+                    }
                 }
             },
             y: {
                 title: {
                     display: true,
-                    text: 'Requests'
+                    text: 'Requests Per Second'
                 },
-                beginAtZero: true
+                ticks: {
+                    beginAtZero: true
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: true
             }
         }
     }
-});
+};
 
-window.addEventListener('load', addRequestData);
-setInterval(addRequestData, 1000);
-setInterval(updateChart, 1000);
+const myChart = new Chart(ctx, config);
+
+// Fungsi untuk mendapatkan data request per detik
+// Anda perlu mengganti ini dengan sumber data aktual
+function getRequestsPerSecond() {
+    // Simulasi data request per detik, ganti dengan logika Anda
+    return Math.floor(Math.random() * 10);
+}
